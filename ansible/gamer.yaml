@@ -1,0 +1,23 @@
+---
+- hosts: tomcatservers
+  sudo: yes
+
+  tasks:
+  - name: Download latest gameoflife.war file
+    get_url: url=http://ec2-52-2-200-9.compute-1.amazonaws.com:8081/nexus/content/repositories/gameoflife/Artifacts/{{time}}/{{build}}/{{gol_version}} dest=/tmp/ mode=755
+
+  - name: Stop tomcat service
+    service: name=tomcat7 state=stopped
+
+  - name: Copy artifact to tomcat7 folder
+    shell: cp /tmp/{{gol_version}} /var/lib/tomcat7/webapps
+
+  - name: Delete link to existing gol version
+    file: path=/var/lib/tomcat7/webapps/gameoflife state=absent
+
+  - name: Start tomcat service
+    service: name=tomcat7 state=started
+
+  - name: Link latest GOL version
+    file: src=/var/lib/tomcat7/webapps/{{time}}-{{build}} dest=/var/lib/tomcat7/webapps/gameoflife state=link
+
